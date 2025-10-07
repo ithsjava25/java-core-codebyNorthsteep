@@ -1,5 +1,10 @@
 package com.example;
 
+import com.example.warehouse.Perishable;
+import com.example.warehouse.Product;
+import com.example.warehouse.Shippable;
+import com.example.warehouse.Warehouse;
+
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
