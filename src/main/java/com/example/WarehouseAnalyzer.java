@@ -1,9 +1,6 @@
 package com.example;
 
-import com.example.warehouse.Perishable;
-import com.example.warehouse.Product;
-import com.example.warehouse.Shippable;
-import com.example.warehouse.Warehouse;
+import com.example.warehouse.*;
 
 import java.math.BigDecimal;
 import java.math.MathContext;

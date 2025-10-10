@@ -1,5 +1,6 @@
 package com.example;
 
+import com.example.warehouse.Category;
 import org.junit.jupiter.api.*;
 
 import java.math.BigDecimal;
