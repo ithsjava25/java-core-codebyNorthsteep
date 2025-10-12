@@ -4,22 +4,33 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 public abstract class Product {
-    private UUID id;
-    private String name;
-    private Category category;
+    //"Final" så att de ej kan ändras, endast BigDecimal ska kunna ändras för prisändring.
+    private final UUID id;
+    private final String name;
+    private final Category category;
     private BigDecimal price;
 
-public UUID getId() {
+    protected Product(String name, Category category, BigDecimal price) {
+        this.id = UUID.randomUUID(); // Ger ett random id-nummer (128bit)
+        this.name = name;
+        this.category = category;
+        this.price = price;
+    }
+
+    public UUID uuid() {
     return id;
 }
-public String getName() {
+public String name() {
     return name;
 }
-public Category getCategory() {
+public Category category() {
     return category;
 }
-public BigDecimal setPrice(BigDecimal newPrice) {
+public BigDecimal price() {
     return price;
+}
+public void price(BigDecimal newPrice) {
+    this.price = newPrice;
 }
 
 abstract String productDetails();
