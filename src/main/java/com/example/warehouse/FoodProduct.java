@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Objects;
+import java.util.UUID;
 
 //todo Rad 293 i basictest
 public class FoodProduct extends Product implements Perishable, Shippable{
@@ -11,13 +12,13 @@ public class FoodProduct extends Product implements Perishable, Shippable{
     private final LocalDate expirationDate;
     private final BigDecimal weight;
 
-    public FoodProduct(String name, BigDecimal price,Category category, LocalDate expirationDate, BigDecimal weight) {
+    public FoodProduct(UUID id, String name,Category category,BigDecimal price, LocalDate expirationDate, BigDecimal weight) {
         super(name, category, price);
         this.expirationDate = expirationDate;
         this.weight = weight;
     }
     @Override
-    protected String productDetails() {
+    public String productDetails() {
         return String.format("Food: s% Expires: s%", name(), expirationDate.toString());
     }
 

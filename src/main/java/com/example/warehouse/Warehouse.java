@@ -1,7 +1,9 @@
 package com.example.warehouse;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Warehouse {
 
@@ -40,7 +42,7 @@ public void addProduct(Product product) {
 
 }
 public List<Product> getProducts() {
-return List.copyOf(products.values()); //Skickar tillbaka en omodifierad kopia av listan på produkter
+return List.copyOf(products.values()); //Skickar tillbaka en omodifierad kopia av listan på produkter/to.List?
 }
 public Optional<Product> getProductById(UUID productID) {
     //Optional för att ge tillbaka true/false då id kan vara obefintlig
@@ -52,16 +54,28 @@ public void updateProductPrice(UUID productID, BigDecimal newPrice) {
 
     product.price(newPrice);
     changedProducts.add(product);
+    //product.forEach(System.out::println)
 }
 public List<Product> getChangedProducts() {
     // returnerar en lista av produkter med ändrat pris
 return  List.copyOf(changedProducts);
 }
 public List<Perishable> expiredProducts() {
-    //todo Ska returnera en lista av produkter som gått ur datum
+    //todo Ska returnera en lista av produkter som gått ur datum java streams filter lektion 13.11
+    //Stream.empty
+    //lista för utgångna produkter
+
+    //.values används i detta fallet då map både har key och value, jag vill bara komma åt value
+    //Går igenom och filtrerar ut products valörer, lokaliserar alla objekt som har en instans av Perishable-interfacet
+// .map används för att gjuta om objekten till Perishable för att kunna använda dess metoder
+    // filtrerar
+    return products.values().stream().filter(product -> product instanceof Perishable)
+            .map(product -> (Perishable) product).filter(Perishable::isExpired).collect(Collectors.toList());
 }
 public List<Shippable> shippableProducts() {
-    //todo Ska returnera en lista av produkter som kan skickas
+    //todo Ska returnera en lista av produkter som kan skickas java streams filter
+    return null; //products.values().stream().filter(product -> product instanceof Shippable)
+            //.map(product -> product (Shippable) product).filter(Shippable::calculateShippingCost).collect(Collectors.toList());
 }
 public void remove(UUID productID) {
 //todo kod för att ta bort en produkt
@@ -72,4 +86,26 @@ public void remove(UUID productID) {
     products.clear();
     changedProducts.clear();
     }
+
+    public boolean isEmpty() {
+        return products.isEmpty();
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Warehouse warehouse)) return false;
+        return Objects.equals(name, warehouse.name) && Objects.equals(products, warehouse.products) && Objects.equals(changedProducts, warehouse.changedProducts);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, products, changedProducts);
+    }
+
+    public List<Product> getProductsGroupedByCategories() {
+    return null;
+    }
+
+
 }

@@ -33,5 +33,5 @@ public void price(BigDecimal newPrice) {
     this.price = newPrice;
 }
 
-abstract String productDetails();
+public abstract String productDetails();
 }
