@@ -37,24 +37,23 @@ private Warehouse(String name) {
     }
 }
 public void addProduct(Product product) {
-    if (product == null) throw new IllegalArgumentException("Product can't be null");
+    if (product == null) throw new IllegalArgumentException("Product cannot be null.");
     products.put(product.uuid(), product);
 
 }
 public List<Product> getProducts() {
-return List.copyOf(products.values()); //Skickar tillbaka en omodifierad kopia av listan på produkter/to.List?
+return List.copyOf(products.values()); //Skickar tillbaka en omodifierad kopia av listan på produkter/to. List?
 }
 public Optional<Product> getProductById(UUID productID) {
     //Optional för att ge tillbaka true/false då id kan vara obefintlig
     return Optional.ofNullable(products.get(productID));
 }
 public void updateProductPrice(UUID productID, BigDecimal newPrice) {
-    Product product = products.get(newPrice);
-    if (productID == null) throw new NoSuchElementException("Product not found with ID: " + productID);
+    Product product = products.get(productID);
+    if (product == null) throw new NoSuchElementException("Product not found with id: " + productID);
 
     product.price(newPrice);
     changedProducts.add(product);
-    //product.forEach(System.out::println)
 }
 public List<Product> getChangedProducts() {
     // returnerar en lista av produkter med ändrat pris
@@ -74,14 +73,19 @@ public List<Perishable> expiredProducts() {
 }
 public List<Shippable> shippableProducts() {
     //todo Ska returnera en lista av produkter som kan skickas java streams filter
-    return null; //products.values().stream().filter(product -> product instanceof Shippable)
-            //.map(product -> product (Shippable) product).filter(Shippable::calculateShippingCost).collect(Collectors.toList());
+    return products.values().stream().filter(product -> product instanceof Shippable)
+            .map(product -> (Shippable) product).collect(Collectors.toList());
 }
 public void remove(UUID productID) {
-//todo kod för att ta bort en produkt
+    /**
+     * Products.remove(productID) - tar bort produkten i Listan products
+     * changedProducts.remove(product) - tar bort produkten om den även finns i Listan changedProducts
+     */
+    Product product = products.remove(productID);
+    changedProducts.remove(product);
 }
 
-    //efterfrågat hos testerna rad:
+    //Efterfrågat hos testerna (beforeEach, afterEach) setUp tearDown. Garanterar att varje test startar med ett "tomt" varuhus
     public void clearProducts() {
     products.clear();
     changedProducts.clear();
@@ -89,6 +93,10 @@ public void remove(UUID productID) {
 
     public boolean isEmpty() {
         return products.isEmpty();
+    }
+
+    public List<Product> getProductsGroupedByCategories() {
+        return null; //products.keySet() .stream()
     }
 
 
@@ -102,10 +110,5 @@ public void remove(UUID productID) {
     public int hashCode() {
         return Objects.hash(name, products, changedProducts);
     }
-
-    public List<Product> getProductsGroupedByCategories() {
-    return null;
-    }
-
 
 }
