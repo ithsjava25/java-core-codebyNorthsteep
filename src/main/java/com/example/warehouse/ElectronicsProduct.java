@@ -17,6 +17,8 @@ public class ElectronicsProduct extends Product implements Shippable{
     public ElectronicsProduct(UUID id, String name, Category category, BigDecimal price, int warrantyMonths, BigDecimal weight) {
         super(name, category, price);
         //validering om pris negativt warrantyMonths
+        if(warrantyMonths < 0)  throw new IllegalArgumentException("Warranty months cannot be negative.");
+        if(weight.compareTo(BigDecimal.ZERO) < 0)  throw new IllegalArgumentException("Weight cannot be negative.");
         this.warrantyMonths = warrantyMonths;
         this.weight = weight;
     }
@@ -36,7 +38,7 @@ public class ElectronicsProduct extends Product implements Shippable{
         BigDecimal baseShippingCost = BigDecimal.valueOf(79);
         BigDecimal extraShippingCost = BigDecimal.valueOf(49);
 
-        if (this.weight.compareTo(new BigDecimal("5.0")) > 0) {
+        if (this.weight.compareTo(BigDecimal.valueOf(5)) > 0) {
             baseShippingCost = baseShippingCost.add(extraShippingCost);
         }
       return baseShippingCost.setScale(2, RoundingMode.HALF_UP);

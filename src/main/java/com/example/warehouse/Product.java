@@ -11,6 +11,8 @@ public abstract class Product {
     private BigDecimal price;
 
     protected Product(String name, Category category, BigDecimal price) {
+        //jämför mot En BigDecimal med värdet 0
+        if(price.compareTo(BigDecimal.ZERO) < 0)  throw new IllegalArgumentException("Price cannot be negative.");
         this.id = UUID.randomUUID(); // Ger ett random id-nummer (128bit)
         this.name = name;
         this.category = category;
@@ -30,6 +32,7 @@ public BigDecimal price() {
     return price;
 }
 public void price(BigDecimal newPrice) {
+    if(price.compareTo(BigDecimal.ZERO) < 0)  throw new IllegalArgumentException("Price cannot be negative.");
     this.price = newPrice;
 }
 

@@ -95,8 +95,13 @@ public void remove(UUID productID) {
         return products.isEmpty();
     }
 
-    public List<Product> getProductsGroupedByCategories() {
-        return null; //products.keySet() .stream()
+    public Map<Category, List<Product>> getProductsGroupedByCategories() {
+
+    //.collect(Collectors.groupingBy gör om en ström av Objekt och fördelar dem i en Map där mappens Key blir kategorin för objektet.
+       // product->product.category() säger - för varje produkt du hämtar , anropa metoden category - resutatet blir att category blir Key i mappen
+    return products.values().stream()
+                .collect(Collectors.groupingBy(product -> product.category()));
+
     }
 
 
