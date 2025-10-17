@@ -140,30 +140,56 @@ class WarehouseAnalyzer {
     }
     
     /**
-     * Identifies products whose price deviates from the mean by more than the specified
-     * number of standard deviations. Uses population standard deviation over all products.
-     * Test expectation: with a mostly tight cluster and two extremes, calling with 2.0 returns the two extremes.
+     * Identifies products whose price deviates from the median by using the IQR method,
+     * a robust method that is used to identify outliners when the data is distorted.
      *
-     * @param standardDeviations threshold in standard deviations (e.g., 2.0)
+     * Outliers are defined as any price outside the range: [Q1 - 1.5 * IQR, Q3 + 1.5 * IQR].
+     * Test expectation: with a mostly tight cluster and two extremes, calling with 1.5 returns the two extremes.
+     *
+     * @param standardDeviations threshold factor (e.g., 1.5). The value is used as
+     * the multiplier in the IQR boundary calculation. (NOTE: 1.5 is the standard factor for the IQR method.)
      * @return list of products considered outliers
      */
     public List<Product> findPriceOutliers(double standardDeviations) {
         List<Product> products = warehouse.getProducts();
         int n = products.size();
         if (n == 0) return List.of();
-        double sum = products.stream().map(Product::price).mapToDouble(bd -> bd.doubleValue()).sum();
-        double mean = sum / n;
-        double variance = products.stream()
-                .map(Product::price)
-                .mapToDouble(bd -> Math.pow(bd.doubleValue() - mean, 2))
-                .sum() / n;
-        double std = Math.sqrt(variance);
-        double threshold = standardDeviations * std;
-        List<Product> outliers = new ArrayList<>();
-        for (Product p : products) {
-            double diff = Math.abs(p.price().doubleValue() - mean);
-            if (diff > threshold) outliers.add(p);
-        }
+        //Hämtar priser i products, förvandlar dem till doubles, sorterar dem och stoppar dem sedan i en lista
+        List<Double> sortedPrices = products.stream()
+                .map(Product::price).mapToDouble(BigDecimal::doubleValue)
+                .boxed().sorted().toList();
+
+        //Hitta Q1-mitten av den billiga halvan & Q3-mitten av den dyra halvan
+        double q1Index = (n + 1) * 0.25;
+        double q3Index = (n + 1) * 0.75;
+
+        int q1LowerIndex = (int) Math.floor(q1Index) - 1;
+        double q1Decimal = q1Index - Math.floor(q1Index);
+        double q1LowerPrice = sortedPrices.get(q1LowerIndex);
+        double q1UpperPrice = sortedPrices.get(q1LowerIndex + 1);
+        double q1Range = q1UpperPrice - q1LowerPrice;
+        double q1IndexValue = q1LowerPrice + (q1Decimal * q1Range);
+
+        int q3LowerIndex = (int) Math.floor(q3Index) - 1;
+        double q3Decimal = q3Index - Math.floor(q3Index);
+        double q3LowerPrice = sortedPrices.get(q3LowerIndex);
+        double q3UpperPrice = sortedPrices.get(q3LowerIndex + 1);
+        double q3Range = q3UpperPrice - q3LowerPrice;
+        double q3IndexValue = q3LowerPrice + (q3Decimal * q3Range);
+
+
+        double iqr = q3IndexValue - q1IndexValue;
+
+        double lowerOutlier = q1IndexValue - standardDeviations * iqr;
+        double upperOutlier = q3IndexValue + standardDeviations * iqr;
+
+        List<Product> outliers = products.stream()
+                .filter(p -> {
+                            double price = p.price().doubleValue();
+                            return (price < lowerOutlier || price > upperOutlier);
+                        })
+                .collect(Collectors.toList());
+
         return outliers;
     }
     
