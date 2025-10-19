@@ -3,7 +3,6 @@ package com.example;
 import com.example.warehouse.*;
 
 import java.math.BigDecimal;
-import java.math.MathContext;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
@@ -140,9 +139,8 @@ class WarehouseAnalyzer {
     }
     
     /**
-     * Identifies products whose price deviates from the median by using the IQR method,
-     * a robust method that is used to identify outliners when the data is distorted.
-     *
+     * Identifies products in Warehouse whose price deviates from the median by using the
+     * InterQuartile Range(IQR) method,a robust method that is used to identify outliners when the data is distorted.
      * Outliers are defined as any price outside the range: [Q1 - 1.5 * IQR, Q3 + 1.5 * IQR].
      * Test expectation: with a mostly tight cluster and two extremes, calling with 1.5 returns the two extremes.
      *
@@ -152,47 +150,75 @@ class WarehouseAnalyzer {
      */
     public List<Product> findPriceOutliers(double standardDeviations) {
         List<Product> products = warehouse.getProducts();
-        int n = products.size();
-        if (n == 0) return List.of();
-        //Hämtar priser i products, förvandlar dem till doubles, sorterar dem och stoppar dem sedan i en lista
+        final int n = products.size();
+        // Edge case: Cannot calculate quartiles reliably with fewer than two items.
+        if (n < 2) return List.of();
+
+        //Retrieve prices(BigDecimal), convert to doubles and sort them.
         List<Double> sortedPrices = products.stream()
                 .map(Product::price).mapToDouble(BigDecimal::doubleValue)
                 .boxed().sorted().toList();
 
-        //Hitta Q1-mitten av den billiga halvan & Q3-mitten av den dyra halvan
+        //Find the median of Q1 and Q3
+        // L = (n + 1) * p method is used here (0.25 for Q1, 0.75 for Q3).
         double q1Index = (n + 1) * 0.25;
         double q3Index = (n + 1) * 0.75;
 
-        int q1LowerIndex = (int) Math.floor(q1Index) - 1;
-        double q1Decimal = q1Index - Math.floor(q1Index);
-        double q1LowerPrice = sortedPrices.get(q1LowerIndex);
-        double q1UpperPrice = sortedPrices.get(q1LowerIndex + 1);
-        double q1Range = q1UpperPrice - q1LowerPrice;
-        double q1IndexValue = q1LowerPrice + (q1Decimal * q1Range);
+        //Quantile value retrieval, using the helper method for linear interpolation.
+       double q1IndexValue = calculateQuantileValue(sortedPrices, q1Index);
+        double q3IndexValue = calculateQuantileValue(sortedPrices, q3Index);
 
-        int q3LowerIndex = (int) Math.floor(q3Index) - 1;
-        double q3Decimal = q3Index - Math.floor(q3Index);
-        double q3LowerPrice = sortedPrices.get(q3LowerIndex);
-        double q3UpperPrice = sortedPrices.get(q3LowerIndex + 1);
-        double q3Range = q3UpperPrice - q3LowerPrice;
-        double q3IndexValue = q3LowerPrice + (q3Decimal * q3Range);
-
-
+        //Determine the IQR for final result.
         double iqr = q3IndexValue - q1IndexValue;
-
         double lowerOutlier = q1IndexValue - standardDeviations * iqr;
         double upperOutlier = q3IndexValue + standardDeviations * iqr;
 
-        List<Product> outliers = products.stream()
+        //Use streams to filter the original product-list based on the calculations
+        return products.stream()
                 .filter(p -> {
-                            double price = p.price().doubleValue();
-                            return (price < lowerOutlier || price > upperOutlier);
+                    double price = p.price().doubleValue();
+                    // Price is an outlier if it is outside the calculated fences.
+                    return (price < lowerOutlier || price > upperOutlier);
                         })
                 .collect(Collectors.toList());
-
-        return outliers;
     }
-    
+
+    /**
+     * Help-method for the method findPriceOutliers -
+     * Calculates the quantile value (Q1, Q2, or Q3) by using linear interpolation.
+     * This is based on my calculated floating-point index (L), using the standard formula L = (n+1) * p.
+     * @param sortedPrices Sorted list with prices.
+     * @param qIndex The calculated floating-point index for the quantile (L). Shows where the quantile should be.
+     * @return The interpolated quantile value.
+     */
+    private static double calculateQuantileValue(List<Double> sortedPrices, double qIndex) {
+        final int n = sortedPrices.size();
+
+        // Calculate the 0-based integer index.
+        // We subtract 1 because the formula (n+1)*p is 1-based,
+        // while Java lists are 0-based.
+        int lowerIndex = (int) Math.floor(qIndex) - 1;
+
+        // Check 1: If the calculated index falls before the start of the list (lowerIndex < 0),
+        // we return the lowest price.This handles small data sets where the quantile
+        // mathematically lands before the first element.
+        if (lowerIndex < 0) return sortedPrices.getFirst();
+
+        // Check 2: If the index falls at or after the end of the list (n-1),
+        // we return the highest price. This is necessary to prevent an IndexOutOfBoundsException
+        // when we try to fetch 'lowerIndex + 1'. The value is assumed to be the last element's value.
+        if (lowerIndex >= n - 1) return sortedPrices.getLast();
+
+        //Linear interpolation
+        // qDecimal represents the weight/fraction of the distance between the two prices.
+        double qDecimal = qIndex - Math.floor(qIndex);
+        double lowerPrice = sortedPrices.get(lowerIndex);
+        double upperPrice = sortedPrices.get(lowerIndex + 1);
+
+        // Formula for linear interpolation: Lower Price + (Weight * Distance between Prices)
+        return lowerPrice + (qDecimal * (upperPrice - lowerPrice));
+    }
+
     /**
      * Groups all shippable products into ShippingGroup buckets such that each group's total weight
      * does not exceed the provided maximum. The goal is to minimize the number of groups and/or total

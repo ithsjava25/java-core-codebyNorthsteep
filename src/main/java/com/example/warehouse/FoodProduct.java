@@ -28,9 +28,8 @@ public class FoodProduct extends Product implements Perishable, Shippable{
     public BigDecimal calculateShippingCost() {
        //Validations: negative price -> IllegalArgumentException("Price cannot be negative."); negative weight -> IllegalArgumentException("Weight cannot be negative.").
        //Shipping rule: cost = weight * 50.
-       BigDecimal cost = weight.multiply(new  BigDecimal(50)).setScale(2, RoundingMode.HALF_UP);
 
-       return cost;
+       return weight.multiply(new  BigDecimal(50)).setScale(2, RoundingMode.HALF_UP);
     }
     @Override
     public Double weight() {

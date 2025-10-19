@@ -32,8 +32,9 @@ public BigDecimal price() {
     return price;
 }
 public void price(BigDecimal newPrice) {
-    if(price.compareTo(BigDecimal.ZERO) < 0)  throw new IllegalArgumentException("Price cannot be negative.");
-    this.price = newPrice;
+        if(price.compareTo(BigDecimal.ZERO) < 0)  throw new IllegalArgumentException("Price cannot be negative.");
+        //Uppdatera DETTA objektets fält 'price', sätt det till lika med det som skickas in som parameter:'newPrice'.
+        this.price = newPrice;
 }
 
 public abstract String productDetails();

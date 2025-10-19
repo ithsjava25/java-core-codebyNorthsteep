@@ -60,9 +60,6 @@ public List<Product> getChangedProducts() {
 return  List.copyOf(changedProducts);
 }
 public List<Perishable> expiredProducts() {
-    //todo Ska returnera en lista av produkter som gått ur datum java streams filter lektion 13.11
-    //Stream.empty
-    //lista för utgångna produkter
 
     //.values används i detta fallet då map både har key och value, jag vill bara komma åt value
     //Går igenom och filtrerar ut products valörer, lokaliserar alla objekt som har en instans av Perishable-interfacet
@@ -72,7 +69,7 @@ public List<Perishable> expiredProducts() {
             .map(product -> (Perishable) product).filter(Perishable::isExpired).collect(Collectors.toList());
 }
 public List<Shippable> shippableProducts() {
-    //todo Ska returnera en lista av produkter som kan skickas java streams filter
+
     return products.values().stream().filter(product -> product instanceof Shippable)
             .map(product -> (Shippable) product).collect(Collectors.toList());
 }
