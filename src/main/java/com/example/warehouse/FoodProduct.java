@@ -3,42 +3,78 @@ package com.example.warehouse;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.Objects;
 import java.util.UUID;
 
-//todo Rad 293 i basictest
-public class FoodProduct extends Product implements Perishable, Shippable{
+/**
+ * Represents a food product in the warehouse.
+ * A FoodProduct implements both  Perishable (has an expiration date) and
+ * Shippable (has a weight and a defined shipping cost calculation).
+ */
+public class FoodProduct extends Product implements Perishable, Shippable {
 
     private final LocalDate expirationDate;
     private final BigDecimal weight;
 
-    public FoodProduct(UUID id, String name,Category category,BigDecimal price, LocalDate expirationDate, BigDecimal weight) {
-        super(name, category, price);
-        //Validering för vikt med negativt värde
-        if(weight.compareTo(BigDecimal.ZERO) < 0)  throw new IllegalArgumentException("Weight cannot be negative.");
+    /**
+     * Constructs a new FoodProduct.
+     *
+     * @param id             The unique identifier for the product
+     * @param name           The name of the food product.
+     * @param category       The product's category.
+     * @param price          The initial price of the product.
+     * @param expirationDate The date on which the product expires.
+     * @param weight         The weight of the product.
+     * @throws IllegalArgumentException if the provided weight is negative.
+     */
+    public FoodProduct(UUID id, String name, Category category, BigDecimal price, LocalDate expirationDate, BigDecimal weight) {
+
+        // Calls the abstract Product constructor.
+        super(id, name, category, price);
+        if (weight.compareTo(BigDecimal.ZERO) < 0) throw new IllegalArgumentException("Weight cannot be negative.");
         this.expirationDate = expirationDate;
         this.weight = weight;
     }
+
+    /**
+     * Provides a summary of the food product, forced from the superclass.
+     * * @return A formatted String containing the product name and its expiration date.
+     */
     @Override
     public String productDetails() {
         return String.format("Food: %s, Expires: %s", name(), expirationDate);
     }
 
-   @Override
-    public BigDecimal calculateShippingCost() {
-       //Validations: negative price -> IllegalArgumentException("Price cannot be negative."); negative weight -> IllegalArgumentException("Weight cannot be negative.").
-       //Shipping rule: cost = weight * 50.
+    // ----- Implementation of the interface Shippable ----
 
-       return weight.multiply(new  BigDecimal(50)).setScale(2, RoundingMode.HALF_UP);
+    /**
+     * Calculates the shipping cost based on the product's weight.
+     * Uses weight * 50, rounded to two decimals.
+     * * @return The calculated shipping cost.
+     */
+    @Override
+    public BigDecimal calculateShippingCost() {
+
+        return weight.multiply(new BigDecimal(50)).setScale(2, RoundingMode.HALF_UP);
     }
+
+    /**
+     * Retrieves the weight of the product as a double.
+     * * @return The product's weight.
+     */
     @Override
     public Double weight() {
 
         return this.weight.doubleValue();
     }
+    // ----Implementation of the Interface Perishable ----
+
+    /**
+     * Retrieves the specific expiration date for this food product.
+     * * @return The product's expiration date.
+     */
     @Override
     public LocalDate expirationDate() {
-        //returnera this för att referera till denna specifika instans i FoodProdukt
-        return  this.expirationDate;
+
+        return this.expirationDate;
     }
 }

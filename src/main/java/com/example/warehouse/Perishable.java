@@ -3,15 +3,23 @@ package com.example.warehouse;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+/**
+ * Defines a contract for products that have an expiration date, such as food or certain chemicals.
+ * Items implementing this interface can be checked for expiration.
+ */
 public interface Perishable {
-//Ska representera produkter med utgånget datum
-    //Alla klasser som implementeras av interfacet måste använda dess metoder
-    //expose expirationDate() and a default isExpired() based on LocalDate.now().
-    //En metod för att få utgångsdatum på produkt
+
     LocalDate expirationDate();
+
+    /**
+     * Checks if the item has expired based on the current date.
+     *
+     * @return true if the expiration date has passed and false if not.
+     */
     default boolean isExpired() {
-        //returnerar true om produkten gått ut
+
         LocalDate idag = LocalDate.now();
+        // Checks if the recorded expiration date is before today's date.
         return expirationDate().isBefore(idag);
     }
 
