@@ -299,7 +299,6 @@ class WarehouseAnalyzer {
      *    when percentage exceeds 70%.
      *  - Category diversity: count of distinct categories in the inventory. The tests expect at least 2.
      *  - Convenience booleans: highValueWarning (percentage > 70%) and minimumDiversity (category count >= 2).
-     *
      * Note: The exact high-value threshold is implementation-defined, but the provided tests create a clear
      * separation using very expensive electronics (e.g., 2000) vs. low-priced food items (e.g., 10),
      * allowing percentage computation regardless of the chosen cutoff as long as it matches the scenario.
@@ -384,7 +383,6 @@ class InventoryValidation {
         this.highValueWarning = highValuePercentage > 70.0;
         this.minimumDiversity = categoryDiversity >= 2;
     }
-
     public double getHighValuePercentage() { return highValuePercentage; }
     public int getCategoryDiversity() { return categoryDiversity; }
     public boolean isHighValueWarning() { return highValueWarning; }

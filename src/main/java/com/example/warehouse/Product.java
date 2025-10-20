@@ -1,6 +1,7 @@
 package com.example.warehouse;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -88,4 +89,14 @@ public abstract class Product {
      */
     public abstract String productDetails();
 
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Product product)) return false;
+        return Objects.equals(id, product.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, category, price);
+    }
 }

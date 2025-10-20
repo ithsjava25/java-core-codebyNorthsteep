@@ -28,6 +28,10 @@ public class Warehouse {
         this.name = name;
     }
 
+    public static Warehouse getInstance() {
+        return getInstance("default");
+    }
+
     /**
      * Retrieves the instance of the Warehouse with the specified name.
      * If an instance with that name does not yet exist, a new one is created and cached.
@@ -36,6 +40,7 @@ public class Warehouse {
      * @return The existing or newly created Warehouse instance.
      */
     public static Warehouse getInstance(String name) {
+
         return warehouses.computeIfAbsent(name, Warehouse::new);
     }
 
@@ -47,6 +52,7 @@ public class Warehouse {
      */
     public void addProduct(Product product) {
         if (product == null) throw new IllegalArgumentException("Product cannot be null.");
+        if (products.containsKey(product.uuid())) throw new IllegalArgumentException("Product with that id already exists, use updateProduct for updates.");
         products.put(product.uuid(), product);
 
     }
@@ -96,8 +102,10 @@ public class Warehouse {
      * @return An unmodifiable List of products that have been modified.
      */
     public List<Product> getChangedProducts() {
-        // returnerar en lista av produkter med ändrat pris
-        return List.copyOf(changedProducts);
+        //Takes a copy of the data
+        List<Product> results = List.copyOf(changedProducts);
+        changedProducts.clear(); // Deletes data after w have copied to prevent accumulation
+        return results;
     }
 
     /**
@@ -167,7 +175,7 @@ public class Warehouse {
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Warehouse warehouse)) return false;
-        return Objects.equals(name, warehouse.name) && Objects.equals(products, warehouse.products) && Objects.equals(changedProducts, warehouse.changedProducts);
+        return Objects.equals(name, warehouse.name);
     }
 
     @Override

@@ -27,10 +27,10 @@ public class FoodProduct extends Product implements Perishable, Shippable {
      * @throws IllegalArgumentException if the provided weight is negative.
      */
     public FoodProduct(UUID id, String name, Category category, BigDecimal price, LocalDate expirationDate, BigDecimal weight) {
-
+        if (weight.compareTo(BigDecimal.ZERO) < 0) throw new IllegalArgumentException("Weight cannot be negative.");
         // Calls the abstract Product constructor.
         super(id, name, category, price);
-        if (weight.compareTo(BigDecimal.ZERO) < 0) throw new IllegalArgumentException("Weight cannot be negative.");
+
         this.expirationDate = expirationDate;
         this.weight = weight;
     }
