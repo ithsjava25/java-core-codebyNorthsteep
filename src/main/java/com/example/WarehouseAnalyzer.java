@@ -144,11 +144,11 @@ class WarehouseAnalyzer {
      * Outliers are defined as any price outside the range: [Q1 - 1.5 * IQR, Q3 + 1.5 * IQR].
      * Test expectation: with a mostly tight cluster and two extremes, calling with 1.5 returns the two extremes.
      *
-     * @param standardDeviations threshold factor (e.g., 1.5). The value is used as
+     * @param thresholdFactor threshold factor (e.g., 1.5). The value is used as
      * the multiplier in the IQR boundary calculation. (NOTE: 1.5 is the standard factor for the IQR method.)
      * @return list of products considered outliers
      */
-    public List<Product> findPriceOutliers(double standardDeviations) {
+    public List<Product> findPriceOutliers(double thresholdFactor) {
         List<Product> products = warehouse.getProducts();
         final int n = products.size();
         // Edge case: Cannot calculate quartiles reliably with fewer than two items.
@@ -170,8 +170,8 @@ class WarehouseAnalyzer {
 
         //Determine the IQR for final result.
         double iqr = q3IndexValue - q1IndexValue;
-        double lowerOutlier = q1IndexValue - standardDeviations * iqr;
-        double upperOutlier = q3IndexValue + standardDeviations * iqr;
+        double lowerOutlier = q1IndexValue - thresholdFactor * iqr;
+        double upperOutlier = q3IndexValue + thresholdFactor * iqr;
 
         //Use streams to filter the original product-list based on the calculations
         return products.stream()

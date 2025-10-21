@@ -76,9 +76,9 @@ public abstract class Product {
      * @throws IllegalArgumentException if the provided new price is negative.
      */
     public void price(BigDecimal newPrice) {
+        this.price = newPrice;
         if (newPrice.compareTo(BigDecimal.ZERO) < 0) throw new IllegalArgumentException("Price cannot be negative.");
 
-        this.price = newPrice;
     }
 
     /**

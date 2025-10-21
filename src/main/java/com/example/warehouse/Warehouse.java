@@ -102,10 +102,9 @@ public class Warehouse {
      * @return An unmodifiable List of products that have been modified.
      */
     public List<Product> getChangedProducts() {
+
         //Takes a copy of the data
-        List<Product> results = List.copyOf(changedProducts);
-        changedProducts.clear(); // Deletes data after w have copied to prevent accumulation
-        return results;
+        return List.copyOf(changedProducts);
     }
 
     /**
@@ -133,12 +132,14 @@ public class Warehouse {
 
     /**
      * Removes a product by its ID from the main collection and the changed products set.
-     *
+     * If product is found - also deletes it in changed products
      * @param productID The ID of the product to remove.
      */
     public void remove(UUID productID) {
         Product product = products.remove(productID);
-        changedProducts.remove(product);
+        if (product != null) {
+            changedProducts.remove(product);
+        }
     }
 
     /**
