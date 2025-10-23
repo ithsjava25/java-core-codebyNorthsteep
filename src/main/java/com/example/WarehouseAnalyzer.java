@@ -160,9 +160,9 @@ class WarehouseAnalyzer {
                 .boxed().sorted().toList();
 
         //Find the median of Q1 and Q3
-        // L = (n + 1) * p method is used here (0.25 for Q1, 0.75 for Q3).
-        double q1Index = (n + 1) * 0.25;
-        double q3Index = (n + 1) * 0.75;
+        // L = (n - 1) * p method is used here (0.25 for Q1, 0.75 for Q3).
+        double q1Index = (n - 1) * 0.25;
+        double q3Index = (n - 1) * 0.75;
 
         //Quantile value retrieval, using the helper method for linear interpolation.
        double q1IndexValue = calculateQuantileValue(sortedPrices, q1Index);
@@ -186,7 +186,7 @@ class WarehouseAnalyzer {
     /**
      * Help-method for the method findPriceOutliers -
      * Calculates the quantile value (Q1, Q2, or Q3) by using linear interpolation.
-     * This is based on my calculated floating-point index (L), using the standard formula L = (n+1) * p.
+     * This is based on my calculated floating-point index (L), using the standard formula L = (n-1) * p.
      * @param sortedPrices Sorted list with prices.
      * @param qIndex The calculated floating-point index for the quantile (L). Shows where the quantile should be.
      * @return The interpolated quantile value.
@@ -197,7 +197,7 @@ class WarehouseAnalyzer {
         // Calculate the 0-based integer index.
         // We subtract 1 because the formula (n+1)*p is 1-based,
         // while Java lists are 0-based.
-        int lowerIndex = (int) Math.floor(qIndex) - 1;
+        int lowerIndex = (int) Math.floor(qIndex);
 
         // Check 1: If the calculated index falls before the start of the list (lowerIndex < 0),
         // we return the lowest price.This handles small data sets where the quantile

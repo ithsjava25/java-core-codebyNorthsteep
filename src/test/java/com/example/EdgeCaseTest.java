@@ -187,9 +187,9 @@ class EdgeCaseTest {
                     .isEqualByComparingTo(new BigDecimal("11.43"));
         }
         /**
-         * Detects price outliers using mean and threshold factor.
+         * Detects price outliers with extreme prices using the InterQuartile Range method.
          * Arrange: mostly normal-priced items around 15, plus very cheap and very expensive outliers.
-         * Act: analyzer.findPriceOutliers(2.0).
+         * Act: analyzer.findPriceOutliers(1.5).
          * Assert: returns exactly the two outliers ("Expensive" and "Cheap").
          */
         @Test
@@ -209,7 +209,7 @@ class EdgeCaseTest {
             warehouse.addProduct(outlierHigh);
             warehouse.addProduct(outlierLow);
 
-            // Act - Find outliers (products with price > 2 threshold factor from mean)
+            // Act - Find outliers, using the IQR method with threshold factor of 1.5
             List<Product> outliers = analyzer.findPriceOutliers(1.5); // threshold factor
 
             // Assert
