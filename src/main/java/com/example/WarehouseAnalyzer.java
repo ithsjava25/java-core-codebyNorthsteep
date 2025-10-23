@@ -1,7 +1,8 @@
 package com.example;
 
+import com.example.warehouse.*;
+
 import java.math.BigDecimal;
-import java.math.MathContext;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
@@ -138,33 +139,85 @@ class WarehouseAnalyzer {
     }
     
     /**
-     * Identifies products whose price deviates from the mean by more than the specified
-     * number of standard deviations. Uses population standard deviation over all products.
-     * Test expectation: with a mostly tight cluster and two extremes, calling with 2.0 returns the two extremes.
+     * Identifies products in Warehouse whose price deviates from the median by using the
+     * InterQuartile Range(IQR) method,a robust method that is used to identify outliners when the data is distorted.
+     * Outliers are defined as any price outside the range: [Q1 - 1.5 * IQR, Q3 + 1.5 * IQR].
+     * Test expectation: with a mostly tight cluster and two extremes, calling with 1.5 returns the two extremes.
      *
-     * @param standardDeviations threshold in standard deviations (e.g., 2.0)
+     * @param thresholdFactor threshold factor (e.g., 1.5). The value is used as
+     * the multiplier in the IQR boundary calculation. (NOTE: 1.5 is the standard factor for the IQR method.)
      * @return list of products considered outliers
      */
-    public List<Product> findPriceOutliers(double standardDeviations) {
+    public List<Product> findPriceOutliers(double thresholdFactor) {
         List<Product> products = warehouse.getProducts();
-        int n = products.size();
-        if (n == 0) return List.of();
-        double sum = products.stream().map(Product::price).mapToDouble(bd -> bd.doubleValue()).sum();
-        double mean = sum / n;
-        double variance = products.stream()
-                .map(Product::price)
-                .mapToDouble(bd -> Math.pow(bd.doubleValue() - mean, 2))
-                .sum() / n;
-        double std = Math.sqrt(variance);
-        double threshold = standardDeviations * std;
-        List<Product> outliers = new ArrayList<>();
-        for (Product p : products) {
-            double diff = Math.abs(p.price().doubleValue() - mean);
-            if (diff > threshold) outliers.add(p);
-        }
-        return outliers;
+        final int n = products.size();
+        // Edge case: Cannot calculate quartiles reliably with fewer than two items.
+        if (n < 2) return List.of();
+
+        //Retrieve prices(BigDecimal), convert to doubles and sort them.
+        List<Double> sortedPrices = products.stream()
+                .map(Product::price).mapToDouble(BigDecimal::doubleValue)
+                .boxed().sorted().toList();
+
+        //Find the median of Q1 and Q3
+        // L = (n - 1) * p method is used here (0.25 for Q1, 0.75 for Q3).
+        double q1Index = (n - 1) * 0.25;
+        double q3Index = (n - 1) * 0.75;
+
+        //Quantile value retrieval, using the helper method for linear interpolation.
+       double q1IndexValue = calculateQuantileValue(sortedPrices, q1Index);
+        double q3IndexValue = calculateQuantileValue(sortedPrices, q3Index);
+
+        //Determine the IQR for final result.
+        double iqr = q3IndexValue - q1IndexValue;
+        double lowerOutlier = q1IndexValue - thresholdFactor * iqr;
+        double upperOutlier = q3IndexValue + thresholdFactor * iqr;
+
+        //Use streams to filter the original product-list based on the calculations
+        return products.stream()
+                .filter(p -> {
+                    double price = p.price().doubleValue();
+                    // Price is an outlier if it is outside the calculated fences.
+                    return (price < lowerOutlier || price > upperOutlier);
+                        })
+                .collect(Collectors.toList());
     }
-    
+
+    /**
+     * Help-method for the method findPriceOutliers -
+     * Calculates the quantile value (Q1, Q2, or Q3) by using linear interpolation.
+     * This is based on my calculated floating-point index (L), using the standard formula L = (n-1) * p.
+     * @param sortedPrices Sorted list with prices.
+     * @param qIndex The calculated floating-point index for the quantile (L). Shows where the quantile should be.
+     * @return The interpolated quantile value.
+     */
+    private static double calculateQuantileValue(List<Double> sortedPrices, double qIndex) {
+        final int n = sortedPrices.size();
+
+        // Calculate the 0-based integer index.
+
+        int lowerIndex = (int) Math.floor(qIndex);
+
+        // Check 1: If the calculated index falls before the start of the list (lowerIndex < 0),
+        // we return the lowest price.This handles small data sets where the quantile
+        // mathematically lands before the first element.
+        if (lowerIndex < 0) return sortedPrices.getFirst();
+
+        // Check 2: If the index falls at or after the end of the list (n-1),
+        // we return the highest price. This is necessary to prevent an IndexOutOfBoundsException
+        // when we try to fetch 'lowerIndex + 1'. The value is assumed to be the last element's value.
+        if (lowerIndex >= n - 1) return sortedPrices.getLast();
+
+        //Linear interpolation
+        // qDecimal represents the weight/fraction of the distance between the two prices.
+        double qDecimal = qIndex - Math.floor(qIndex);
+        double lowerPrice = sortedPrices.get(lowerIndex);
+        double upperPrice = sortedPrices.get(lowerIndex + 1);
+
+        // Formula for linear interpolation: Lower Price + (Weight * Distance between Prices)
+        return lowerPrice + (qDecimal * (upperPrice - lowerPrice));
+    }
+
     /**
      * Groups all shippable products into ShippingGroup buckets such that each group's total weight
      * does not exceed the provided maximum. The goal is to minimize the number of groups and/or total
@@ -245,7 +298,6 @@ class WarehouseAnalyzer {
      *    when percentage exceeds 70%.
      *  - Category diversity: count of distinct categories in the inventory. The tests expect at least 2.
      *  - Convenience booleans: highValueWarning (percentage > 70%) and minimumDiversity (category count >= 2).
-     *
      * Note: The exact high-value threshold is implementation-defined, but the provided tests create a clear
      * separation using very expensive electronics (e.g., 2000) vs. low-priced food items (e.g., 10),
      * allowing percentage computation regardless of the chosen cutoff as long as it matches the scenario.
@@ -330,7 +382,6 @@ class InventoryValidation {
         this.highValueWarning = highValuePercentage > 70.0;
         this.minimumDiversity = categoryDiversity >= 2;
     }
-
     public double getHighValuePercentage() { return highValuePercentage; }
     public int getCategoryDiversity() { return categoryDiversity; }
     public boolean isHighValueWarning() { return highValueWarning; }
