@@ -195,8 +195,7 @@ class WarehouseAnalyzer {
         final int n = sortedPrices.size();
 
         // Calculate the 0-based integer index.
-        // We subtract 1 because the formula (n+1)*p is 1-based,
-        // while Java lists are 0-based.
+
         int lowerIndex = (int) Math.floor(qIndex);
 
         // Check 1: If the calculated index falls before the start of the list (lowerIndex < 0),
